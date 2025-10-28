@@ -1,0 +1,29 @@
+{
+  "name": "beaconblock-dashboard",
+  "version": "1.0.0",
+  "description": "Dynamic Substrate Chain Integration Dashboard - Next-generation network health monitoring for the Polkadot ecosystem",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "client:dev": "cd client && npm run dev",
+    "server:dev": "cd server && npm run dev",
+    "build": "cd client && npm run build",
+    "start": "cd server && npm start",
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install"
+  },
+  "keywords": [
+    "substrate",
+    "polkadot",
+    "blockchain",
+    "explorer",
+    "dashboard",
+    "monitoring",
+    "parachain",
+    "validator"
+  ],
+  "author": "BeaconBlock Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
