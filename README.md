@@ -153,3 +153,7 @@ If you encounter any issues or have questions:
 ---
 
 Built with ❤️ for the Substrate and Polkadot ecosystem
+=======
+# BeaconBlock-Network-Health-Dashboard
+Real-time visualization dashbord for Polkadot network - built for Polkadot Hackathon
+>>>>>>> 0f46ba0943d3833c09494d3afbadfd2e5d3c56e9
