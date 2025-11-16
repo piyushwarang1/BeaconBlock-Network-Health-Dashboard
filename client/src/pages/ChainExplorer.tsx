@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Hash, User, Clock, Database, ExternalLink } from 'lucide-react';
+import { Search, Hash, Clock, Database, ExternalLink } from 'lucide-react';
 import { socket } from '../lib/socket';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -9,7 +9,6 @@ import { Select } from '../components/ui/Input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Loading } from '../components/ui/Loading';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
 import { chainApi } from '../lib/api';
 
 const ChainExplorer = () => {
@@ -34,7 +33,7 @@ const ChainExplorer = () => {
   
   // Process chains data to ensure it's always an array
   const chains = Array.isArray(chainsResponse?.data)
-    ? chainsResponse?.data.map((chain, index) => ({
+    ? chainsResponse?.data.map((chain: any, _index: number) => ({
         id: chain.id,
         name: chain.name
       }))
@@ -61,7 +60,7 @@ const ChainExplorer = () => {
   useEffect(() => {
     if (!selectedChain) return;
 
-    const onNewBlock = (block) => {
+    const onNewBlock = (block: any) => {
       console.log('New block received:', block);
       // Update block list
     };
@@ -79,7 +78,7 @@ const ChainExplorer = () => {
     // Implement search functionality
   };
 
-  const handleBlockSelect = (block) => {
+  const handleBlockSelect = (block: any) => {
     setSelectedBlock(block);
     // Fetch block details
   };
@@ -90,7 +89,7 @@ const ChainExplorer = () => {
         <h1 className="text-2xl font-bold">Chain Explorer</h1>
         {selectedChain && (
           <Badge variant="outline">
-            {chains.find(c => c.id === selectedChain)?.name || 'Unknown Chain'}
+            {chains.find((c: any) => c.id === selectedChain)?.name || 'Unknown Chain'}
           </Badge>
         )}
       </div>
@@ -107,7 +106,7 @@ const ChainExplorer = () => {
             value={selectedChain}
             onChange={(e) => setSelectedChain(e.target.value)}
             placeholder="Select a chain"
-            options={chains.map(chain => ({
+            options={chains.map((chain: any) => ({
               value: chain.id,
               label: chain.name
             }))}
@@ -160,7 +159,7 @@ const ChainExplorer = () => {
                     <Loading text="Loading blocks..." />
                   ) : (
                     <div className="space-y-2">
-                      {recentBlocks?.map(block => (
+                      {recentBlocks?.map((block: any) => (
                         <div 
                           key={block.hash}
                           className={`p-3 rounded-md border cursor-pointer transition-colors hover:bg-accent ${

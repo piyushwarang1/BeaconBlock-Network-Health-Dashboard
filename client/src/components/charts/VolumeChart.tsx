@@ -11,9 +11,6 @@ import {
   TimeScale
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
-import { useQuery } from '@tanstack/react-query';
-import { volumeApi } from '../../lib/api';
-import { Loading } from '../ui/Loading';
 
 ChartJS.register(
   CategoryScale,
@@ -32,7 +29,7 @@ interface VolumeChartProps {
   data?: any;
 }
 
-export default function VolumeChart({ pairAddress, days = 7, height = 300, data }: VolumeChartProps) {
+export default function VolumeChart({ days = 7, height = 300, data }: VolumeChartProps) {
   // Process the data
   const chartData = React.useMemo(() => {
     if (!data || !Array.isArray(data) || data.length === 0) {

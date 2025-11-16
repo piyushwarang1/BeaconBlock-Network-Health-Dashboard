@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Users, TrendingUp, AlertTriangle, CheckCircle, Clock, Award, Shield } from 'lucide-react';
+import { Users, TrendingUp, AlertTriangle, CheckCircle, Award, Shield } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Loading } from '../components/ui/Loading';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
@@ -64,7 +63,7 @@ export default function ValidatorMonitor() {
   });
 
   const chains = Array.isArray(chainsResponse?.data)
-    ? chainsResponse?.data.map((chain, index) => ({
+    ? chainsResponse?.data.map((chain: any, index: number) => ({
         id: chain.id || chain.metadata?.chainId || `unknown-chain-${index}`,
         name: chain.name || chain.metadata?.chainName || `Unknown Chain ${index + 1}`
       }))
@@ -133,7 +132,7 @@ export default function ValidatorMonitor() {
         <h1 className="text-2xl font-bold">Validator Monitor</h1>
         {selectedChain && (
           <Badge variant="outline">
-            {chains.find(c => c.id === selectedChain)?.name || 'Unknown Chain'}
+            {chains.find((c: any) => c.id === selectedChain)?.name || 'Unknown Chain'}
           </Badge>
         )}
       </div>
@@ -152,7 +151,7 @@ export default function ValidatorMonitor() {
               onChange={(e) => setSelectedChain(e.target.value)}
             >
               <option value="">Select a chain</option>
-              {chains.map(chain => (
+              {chains.map((chain: any) => (
                 <option key={chain.id} value={chain.id}>{chain.name}</option>
               ))}
             </select>

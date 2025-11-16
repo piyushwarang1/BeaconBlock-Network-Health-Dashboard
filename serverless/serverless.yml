@@ -1,0 +1,162 @@
+service: beaconblock-serverless
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  environment:
+    NODE_ENV: ${self:provider.stage}
+    LOG_LEVEL: ${env:LOG_LEVEL, 'info'}
+  httpApi:
+    cors:
+      allowedOrigins:
+        - http://localhost:3000
+        - https://beaconblock-dashboard.vercel.app
+      allowedHeaders:
+        - Content-Type
+        - X-Amz-Date
+        - Authorization
+        - X-Api-Key
+        - X-Amz-Security-Token
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: "*"
+
+functions:
+  # Chain Management Functions
+  getChains:
+    handler: dist/functions/chains.getChains
+    events:
+      - httpApi:
+          path: /api/chains
+          method: get
+
+  connectChain:
+    handler: dist/functions/chains.connectChain
+    events:
+      - httpApi:
+          path: /api/chains/connect
+          method: post
+
+  getChainMetadata:
+    handler: dist/functions/chains.getChainMetadata
+    events:
+      - httpApi:
+          path: /api/chains/{chainId}
+          method: get
+
+  getChainStats:
+    handler: dist/functions/chains.getChainStats
+    events:
+      - httpApi:
+          path: /api/chains/{chainId}/stats
+          method: get
+
+  getChainBlocks:
+    handler: dist/functions/chains.getChainBlocks
+    events:
+      - httpApi:
+          path: /api/chains/{chainId}/blocks
+          method: get
+
+  getTokenDistribution:
+    handler: dist/functions/chains.getTokenDistribution
+    events:
+      - httpApi:
+          path: /api/chains/{chainId}/token-distribution
+          method: get
+
+  # Price Functions
+  getCurrentPrice:
+    handler: dist/functions/prices.getCurrentPrice
+    events:
+      - httpApi:
+          path: /api/prices/{tokenId}
+          method: get
+
+  getPriceHistory:
+    handler: dist/functions/prices.getPriceHistory
+    events:
+      - httpApi:
+          path: /api/prices/{tokenId}/history
+          method: get
+
+  # Volume Functions
+  getCurrentVolume:
+    handler: dist/functions/volume.getCurrentVolume
+    events:
+      - httpApi:
+          path: /api/volume/pairs/{pairAddress}
+          method: get
+
+  getVolumeHistory:
+    handler: dist/functions/volume.getVolumeHistory
+    events:
+      - httpApi:
+          path: /api/volume/pairs/{pairAddress}/history
+          method: get
+
+  # Discovery Functions
+  getEndpoints:
+    handler: dist/functions/discovery.getEndpoints
+    events:
+      - httpApi:
+          path: /api/discovery/endpoints
+          method: get
+
+  testEndpoint:
+    handler: dist/functions/discovery.testEndpoint
+    events:
+      - httpApi:
+          path: /api/discovery/test
+          method: post
+
+  # Health Check
+  healthCheck:
+    handler: dist/functions/health.healthCheck
+    events:
+      - httpApi:
+          path: /api/health
+          method: get
+
+  # Predictive Analytics
+  getPredictions:
+    handler: functions/predictions.predict
+    runtime: python3.9
+    events:
+      - httpApi:
+          path: /api/predictions
+          method: get
+
+  # Sentiment Analysis
+  getSentiment:
+    handler: functions/sentiment.sentiment
+    runtime: python3.9
+    events:
+      - httpApi:
+          path: /api/sentiment
+          method: get
+
+plugins:
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 5005
+    websocketPort: 5003
+    lambdaPort: 5004

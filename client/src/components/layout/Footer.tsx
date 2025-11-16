@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, Github } from 'lucide-react';
 import { Button } from '../ui/Button';
@@ -14,17 +13,15 @@ export default function Footer() {
         </div>
         
         <div className="flex items-center space-x-4">
-          <Button 
-            as="a" 
-            href="https://github.com/polkadot-js/api" 
+          <a
+            href="https://github.com/polkadot-js/api"
             target="_blank"
             rel="noopener noreferrer"
-            variant="link"
-            className="text-sm"
-            leftIcon={<Github className="h-4 w-4" />}
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
+            <Github className="h-4 w-4 mr-1" />
             Polkadot-JS API
-          </Button>
+          </a>
           
           <Button 
             as={Link} 
@@ -35,17 +32,15 @@ export default function Footer() {
             Settings
           </Button>
           
-          <Button 
-            as="a" 
-            href="https://polkadot.network/" 
+          <a
+            href="https://polkadot.network/"
             target="_blank"
             rel="noopener noreferrer"
-            variant="link"
-            className="text-sm"
-            rightIcon={<ExternalLink className="h-3 w-3" />}
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             Polkadot Network
-          </Button>
+            <ExternalLink className="h-3 w-3 ml-1" />
+          </a>
         </div>
       </div>
     </footer>

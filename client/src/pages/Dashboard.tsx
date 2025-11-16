@@ -1,27 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { chainApi, priceApi, volumeApi, tokenApi } from '../lib/api';
 import { Loading } from '../components/ui/Loading';
 import { Button } from '../components/ui/Button';
+import { SimpleTooltip } from '../components/ui/Tooltip';
 import PriceChart from '../components/charts/PriceChart';
 import VolumeChart from '../components/charts/VolumeChart';
 import TokenDistributionChart from '../components/charts/TokenDistributionChart';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
 import { Select } from '../components/ui/Input';
 import { socket } from '../lib/socket';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Activity, 
-  DollarSign, 
-  BarChart3, 
+import {
+  TrendingUp,
+  DollarSign,
+  BarChart3,
   Server,
   Users,
   Clock,
   Zap,
-  Shield
+  Shield,
+  Network
 } from 'lucide-react';
 
 const RING_TOKEN_ID = 'darwinia-network-native-token';
@@ -33,7 +31,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   // Fetch chains
-  const { data: chains = [], isLoading: isLoadingChains } = useQuery({
+  const { data: chains = [] } = useQuery({
     queryKey: ['chains'],
     queryFn: () => chainApi.getChains(),
     select: (data) => data.data || [],
@@ -42,7 +40,7 @@ export default function Dashboard() {
 
   // Set first chain as selected by default
   useEffect(() => {
-    if (chains.length > 0 && !selectedChainId) {
+    if (chains?.length > 0 && !selectedChainId) {
       setSelectedChainId(chains[0].id);
     }
   }, [chains, selectedChainId]);
@@ -64,14 +62,6 @@ export default function Dashboard() {
     enabled: !!selectedChainId,
   });
 
-  // Fetch recent blocks for selected chain
-  const { data: recentBlocks, isLoading: isLoadingBlocks } = useQuery({
-    queryKey: ['recentBlocks', selectedChainId],
-    queryFn: () => chainApi.getBlocks(selectedChainId, 10),
-    select: (data) => data.data?.blocks || [],
-    enabled: !!selectedChainId,
-    refetchInterval: 10000,
-  });
 
   // Listen for real-time updates
   useEffect(() => {
@@ -106,7 +96,7 @@ export default function Dashboard() {
   }, [selectedChainId]);
 
   // Fetch price data
-  const { data: priceData, isLoading: isPriceLoading } = useQuery({
+  const { data: priceData } = useQuery({
     queryKey: ['currentPrice', RING_TOKEN_ID],
     queryFn: () => priceApi.getCurrentPrice(RING_TOKEN_ID),
     select: (data) => data.data,
@@ -114,15 +104,15 @@ export default function Dashboard() {
   });
 
   // Fetch price history
-  const { data: priceHistory, isLoading: isPriceHistoryLoading } = useQuery({
-    queryKey: ['priceHistory', RING_TOKEN_ID, days],
-    queryFn: () => priceApi.getPriceHistory(RING_TOKEN_ID, days),
-    staleTime: 60 * 1000,
-    select: (data) => data.data,
-  });
+   const { isLoading: isPriceHistoryLoading } = useQuery({
+     queryKey: ['priceHistory', RING_TOKEN_ID, days],
+     queryFn: () => priceApi.getPriceHistory(RING_TOKEN_ID, days),
+     staleTime: 60 * 1000,
+     select: (data) => data.data,
+   });
 
   // Fetch volume data
-  const { data: volumeData, isLoading: isVolumeLoading } = useQuery({
+  const {} = useQuery({
     queryKey: ['currentVolume', RING_PAIR_ADDRESS],
     queryFn: () => volumeApi.getCurrentVolume(RING_PAIR_ADDRESS),
     select: (data) => data.data,
@@ -146,19 +136,15 @@ export default function Dashboard() {
   });
 
   // Calculate aggregate statistics
-  const totalBlocks = chains.reduce((sum, chain) => 
-    sum + (chain.detailedStatus?.latestBlockNumber || 0), 0
-  );
-  
-  const totalValidators = chains.reduce((sum, chain) => 
-    sum + (chain.detailedStatus?.activeValidators || 0), 0
-  );
+   const totalValidators = chains?.reduce((sum: number, chain: any) =>
+     sum + (chain.detailedStatus?.activeValidators || 0), 0
+   ) || 0;
 
-  const avgBlockTime = chains.length > 0
-    ? chains.reduce((sum, chain) => sum + (chain.detailedStatus?.blockTime || 0), 0) / chains.length
-    : 0;
+   const avgBlockTime = chains?.length > 0
+     ? chains.reduce((sum: number, chain: any) => sum + (chain.detailedStatus?.blockTime || 0), 0) / chains.length
+     : 0;
 
-  const selectedChain = chains.find(c => c.id === selectedChainId);
+   const selectedChain = chains?.find((c: any) => c.id === selectedChainId);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -169,260 +155,240 @@ export default function Dashboard() {
     }).format(price);
   };
 
-  const formatVolume = (volume: number) => {
-    if (volume >= 1000000) {
-      return `${(volume / 1000000).toFixed(2)}M`;
-    }
-    if (volume >= 1000) {
-      return `${(volume / 1000).toFixed(2)}K`;
-    }
-    return `${volume.toFixed(2)}`;
-  };
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('en-US').format(num);
   };
 
-  const formatBalance = (balance: string) => {
-    const num = parseFloat(balance);
-    if (isNaN(num)) return '0';
-    return (num / 1e18).toFixed(4);
-  };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Network Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
-            Comprehensive view of all network metrics and data
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <select
-            value={days}
-            onChange={(e) => setDays(Number(e.target.value))}
-            className="px-3 py-2 border rounded-lg bg-background"
-          >
-            <option value={1}>24 Hours</option>
-            <option value={7}>7 Days</option>
-            <option value={30}>30 Days</option>
-            <option value={90}>90 Days</option>
-          </select>
-          <Button 
-            variant="primary" 
-            animation="ripple"
-            onClick={() => navigate('/discovery')}
-          >
-            Add Network
-          </Button>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-8">
 
-      {/* Chain Selector */}
-      {chains.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Select Chain</CardTitle>
-            <CardDescription>Choose a chain to view detailed metrics</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Select
-              value={selectedChainId}
-              onChange={(e) => setSelectedChainId(e.target.value)}
-              options={chains.map(chain => ({
-                value: chain.id,
-                label: chain.name
-              }))}
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Selected Chain Details */}
-      {selectedChainId && selectedChain && (
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="text-2xl">{selectedChain.name}</CardTitle>
-                <CardDescription className="mt-2">
-                  Chain ID: {selectedChainId}
-                </CardDescription>
-              </div>
-              <Badge variant="default" size="lg">
-                {selectedChain.status === 'connected' ? 'Connected' : 'Disconnected'}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isLoadingStats || isLoadingMetadata ? (
-              <Loading text="Loading chain data..." />
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-4 border rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Zap className="h-4 w-4 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Latest Block</p>
-                  </div>
-                  <p className="text-2xl font-bold">
-                    {formatNumber(chainStats?.blockNumber || 0)}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Hash: {chainStats?.blockHash?.slice(0, 10)}...
-                  </p>
-                </div>
-
-                <div className="p-4 border rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Finalized Block</p>
-                  </div>
-                  <p className="text-2xl font-bold">
-                    {formatNumber(chainStats?.finalizedBlock || 0)}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Block Time: {chainStats?.blockTime || chainMetadata?.blockTime || 0}s
-                  </p>
-                </div>
-
-                <div className="p-4 border rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Active Validators</p>
-                  </div>
-                  <p className="text-2xl font-bold">
-                    {formatNumber(chainStats?.activeValidators || 0)}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Total: {formatNumber(chainStats?.totalValidators || 0)}
-                  </p>
-                </div>
-
-                <div className="p-4 border rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Shield className="h-4 w-4 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Network State</p>
-                  </div>
-                  <p className="text-2xl font-bold">
-                    {chainStats?.networkState || 'Unknown'}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Peers: {chainStats?.peers || 0}
-                  </p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Top Level Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
+          {/* Header Section */}
+          <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-8 border border-slate-200 dark:border-slate-700 shadow-lg">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Active Networks</p>
-                <p className="text-2xl font-bold mt-1">{chains.length}</p>
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/50 rounded-xl">
+                  <Network className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold text-slate-900 dark:text-white">Network Dashboard</h1>
+                  <p className="mt-2 text-slate-600 dark:text-slate-300 text-lg">
+                    Real-time monitoring and analytics for Substrate-based blockchain networks
+                  </p>
+                </div>
               </div>
-              <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                <Server className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                  <select
+                    value={days}
+                    onChange={(e) => setDays(Number(e.target.value))}
+                    className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  >
+                    <option value={1}>24 Hours</option>
+                    <option value={7}>7 Days</option>
+                    <option value={30}>30 Days</option>
+                    <option value={90}>90 Days</option>
+                  </select>
+                </div>
+                <Button
+                  variant="primary"
+                  onClick={() => navigate('/discovery')}
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  <Server className="h-5 w-5 mr-2" />
+                  Add Network
+                </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+          {/* Network Overview Summary */}
+          <div className="bg-blue-50 dark:bg-slate-800 rounded-2xl p-6 border border-blue-200 dark:border-slate-700 shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-gradient-to-br from-indigo-100 to-indigo-200 dark:from-indigo-900/50 dark:to-indigo-800/50 rounded-xl">
+                <Network className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              </div>
               <div>
-                <p className="text-sm text-muted-foreground">RING Price</p>
-                <p className="text-2xl font-bold mt-1">
-                  {isPriceLoading ? (
-                    <span className="text-muted-foreground">Loading...</span>
-                  ) : (
-                    formatPrice(priceData?.price || 0)
-                  )}
-                </p>
-                {priceData?.priceChange24h !== undefined && (
-                  <div className="flex items-center mt-1">
-                    {priceData.priceChange24h >= 0 ? (
-                      <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
-                    )}
-                    <span className={priceData.priceChange24h >= 0 ? 'text-green-500' : 'text-red-500'}>
-                      {priceData.priceChange24h.toFixed(2)}%
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Network Overview</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-300">Key metrics across all monitored networks</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <SimpleTooltip content="Total number of blockchain networks currently connected and monitored">
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 dark:from-slate-800/50 dark:to-slate-700/30 rounded-xl p-6 border border-slate-200/50 dark:border-slate-600/50 hover:shadow-lg transition-all duration-300 cursor-help">
+                  <div className="flex items-center justify-between mb-4">
+                    <Server className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-full">TOTAL</span>
+                  </div>
+                  <div className="text-3xl font-bold text-slate-900 dark:text-white mb-1">{chains?.length || 0}</div>
+                  <div className="text-sm text-slate-600 dark:text-slate-400">Connected Networks</div>
+                </div>
+              </SimpleTooltip>
+
+              <SimpleTooltip content="Sum of active validators across all connected networks">
+                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-900/20 rounded-xl p-6 border border-emerald-200/50 dark:border-emerald-800/50 hover:shadow-lg transition-all duration-300 cursor-help">
+                  <div className="flex items-center justify-between mb-4">
+                    <Users className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/50 px-2 py-1 rounded-full">ACTIVE</span>
+                  </div>
+                  <div className="text-3xl font-bold text-slate-900 dark:text-white mb-1">{formatNumber(totalValidators)}</div>
+                  <div className="text-sm text-slate-600 dark:text-slate-400">Total Validators</div>
+                </div>
+              </SimpleTooltip>
+
+              <SimpleTooltip content="Average time between blocks across all networks">
+                <div className="bg-gradient-to-br from-cyan-50 to-cyan-100/50 dark:from-cyan-950/30 dark:to-cyan-900/20 rounded-xl p-6 border border-cyan-200/50 dark:border-cyan-800/50 hover:shadow-lg transition-all duration-300 cursor-help">
+                  <div className="flex items-center justify-between mb-4">
+                    <Clock className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
+                    <span className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 bg-cyan-100 dark:bg-cyan-900/50 px-2 py-1 rounded-full">AVG</span>
+                  </div>
+                  <div className="text-3xl font-bold text-slate-900 dark:text-white mb-1">{avgBlockTime.toFixed(1)}s</div>
+                  <div className="text-sm text-slate-600 dark:text-slate-400">Avg Block Time</div>
+                </div>
+              </SimpleTooltip>
+
+              <SimpleTooltip content="Current market price of RING token">
+                <div className="bg-gradient-to-br from-rose-50 to-rose-100/50 dark:from-rose-950/30 dark:to-rose-900/20 rounded-xl p-6 border border-rose-200/50 dark:border-rose-800/50 hover:shadow-lg transition-all duration-300 cursor-help">
+                  <div className="flex items-center justify-between mb-4">
+                    <DollarSign className="w-6 h-6 text-rose-600 dark:text-rose-400" />
+                    <span className="text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-100 dark:bg-rose-900/50 px-2 py-1 rounded-full">RING</span>
+                  </div>
+                  <div className="text-3xl font-bold text-slate-900 dark:text-white mb-1">{priceData ? formatPrice(priceData.price) : 'N/A'}</div>
+                  <div className="text-sm text-slate-600 dark:text-slate-400">Current Price</div>
+                </div>
+              </SimpleTooltip>
+            </div>
+          </div>
+
+          {/* Chain Selector */}
+        {chains.length > 0 && (
+          <div className="mb-8">
+            <div className="bg-green-50 dark:bg-slate-800 rounded-2xl p-6 border border-green-200 dark:border-slate-700 shadow-lg">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-1">Network Selection</h3>
+                  <p className="text-slate-600 dark:text-slate-300">Choose a blockchain network to monitor in detail</p>
+                </div>
+                <Select
+                  value={selectedChainId}
+                  onChange={(e) => setSelectedChainId(e.target.value)}
+                  options={chains?.map((chain: any) => ({
+                    value: chain.id,
+                    label: chain.name
+                  })) || []}
+                  className="min-w-[250px]"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Selected Chain Details */}
+        {selectedChainId && selectedChain && (
+          <div className="mb-8">
+            <div className="bg-purple-50 dark:bg-slate-800 rounded-2xl p-8 border border-purple-200 dark:border-slate-700 shadow-lg">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{selectedChain.name}</h3>
+                  <p className="text-slate-600 dark:text-slate-300">Real-time network statistics and health metrics</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className={`flex items-center gap-2 px-4 py-2 rounded-full ${
+                    selectedChain.status === 'connected'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                      : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                  }`}>
+                    <div className={`w-2 h-2 rounded-full ${
+                      selectedChain.status === 'connected' ? 'bg-green-500' : 'bg-red-500'
+                    }`}></div>
+                    <span className="text-sm font-medium">
+                      {selectedChain.status === 'connected' ? 'Connected' : 'Disconnected'}
                     </span>
                   </div>
-                )}
+                </div>
               </div>
-              <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
-                <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+              {isLoadingStats || isLoadingMetadata ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-6 border border-slate-200 dark:border-slate-600">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="w-6 h-6 bg-slate-200 dark:bg-slate-600 rounded animate-pulse"></div>
+                        <div className="w-12 h-4 bg-slate-200 dark:bg-slate-600 rounded animate-pulse"></div>
+                      </div>
+                      <div className="w-16 h-8 bg-slate-200 dark:bg-slate-600 rounded animate-pulse mb-2"></div>
+                      <div className="w-20 h-4 bg-slate-200 dark:bg-slate-600 rounded animate-pulse"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <SimpleTooltip content="The most recent block number processed on this blockchain network">
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20 rounded-xl p-6 border border-blue-200/50 dark:border-blue-800/50 hover:shadow-lg transition-all duration-300 cursor-help">
+                      <div className="flex items-center justify-between mb-4">
+                        <Zap className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                        <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 px-2 py-1 rounded-full">LIVE</span>
+                      </div>
+                      <div className="text-3xl font-bold text-slate-900 dark:text-white mb-1">{formatNumber(chainStats?.blockNumber || 0)}</div>
+                      <div className="text-sm text-slate-600 dark:text-slate-400">Latest Block</div>
+                    </div>
+                  </SimpleTooltip>
+
+                  <SimpleTooltip content="Average time to produce a new block on this network">
+                    <div className="bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950/30 dark:to-green-900/20 rounded-xl p-6 border border-green-200/50 dark:border-green-800/50 hover:shadow-lg transition-all duration-300 cursor-help">
+                      <div className="flex items-center justify-between mb-4">
+                        <Clock className="w-6 h-6 text-green-600 dark:text-green-400" />
+                        <span className="text-xs font-semibold text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/50 px-2 py-1 rounded-full">ACTIVE</span>
+                      </div>
+                      <div className="text-3xl font-bold text-slate-900 dark:text-white mb-1">{chainStats?.blockTime || chainMetadata?.blockTime || 0}s</div>
+                      <div className="text-sm text-slate-600 dark:text-slate-400">Block Time</div>
+                    </div>
+                  </SimpleTooltip>
+
+                  <SimpleTooltip content="Number of validators currently participating in consensus">
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950/30 dark:to-purple-900/20 rounded-xl p-6 border border-purple-200/50 dark:border-purple-800/50 hover:shadow-lg transition-all duration-300 cursor-help">
+                      <div className="flex items-center justify-between mb-4">
+                        <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                        <span className="text-xs font-semibold text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 px-2 py-1 rounded-full">SECURE</span>
+                      </div>
+                      <div className="text-3xl font-bold text-slate-900 dark:text-white mb-1">{formatNumber(chainStats?.activeValidators || 0)}</div>
+                      <div className="text-sm text-slate-600 dark:text-slate-400">Active Validators</div>
+                    </div>
+                  </SimpleTooltip>
+
+                  <SimpleTooltip content="Number of peer nodes connected to this network">
+                    <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 dark:from-orange-950/30 dark:to-orange-900/20 rounded-xl p-6 border border-orange-200/50 dark:border-orange-800/50 hover:shadow-lg transition-all duration-300 cursor-help">
+                      <div className="flex items-center justify-between mb-4">
+                        <Shield className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                        <span className="text-xs font-semibold text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/50 px-2 py-1 rounded-full">STABLE</span>
+                      </div>
+                      <div className="text-3xl font-bold text-slate-900 dark:text-white mb-1">{chainStats?.peers || 0}</div>
+                      <div className="text-sm text-slate-600 dark:text-slate-400">Network Peers</div>
+                    </div>
+                  </SimpleTooltip>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          {/* Price Chart */}
+          <div className="bg-yellow-50 dark:bg-slate-800 rounded-2xl p-6 border border-yellow-200 dark:border-slate-700 shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/50 rounded-xl">
+                <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+              </div>
               <div>
-                <p className="text-sm text-muted-foreground">24h Volume</p>
-                <p className="text-2xl font-bold mt-1">
-                  {isVolumeLoading ? (
-                    <span className="text-muted-foreground">Loading...</span>
-                  ) : (
-                    formatVolume(volumeData?.volume24h || 0)
-                  )}
-                </p>
-                {volumeData?.liquidity !== undefined && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Liquidity: {formatVolume(volumeData.liquidity)}
-                  </p>
-                )}
-              </div>
-              <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                <BarChart3 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Price Analytics</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-300">RING token price movement over time</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Validators</p>
-                <p className="text-2xl font-bold mt-1">{formatNumber(totalValidators)}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Avg Block Time: {avgBlockTime.toFixed(1)}s
-                </p>
-              </div>
-              <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-lg">
-                <Shield className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Price Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              RING Price History
-            </CardTitle>
-            <CardDescription>
-              Price movement over the last {days} days
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
             {isPriceHistoryLoading ? (
               <div className="h-[300px] flex items-center justify-center">
                 <Loading text="Loading price data..." />
@@ -431,25 +397,22 @@ export default function Dashboard() {
               <PriceChart
                 tokenId={RING_TOKEN_ID}
                 days={days}
-                data={priceHistory}
                 height={300}
               />
             )}
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Volume Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Trading Volume
-            </CardTitle>
-            <CardDescription>
-              Volume activity over the last {days} days
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+          {/* Volume Chart */}
+          <div className="bg-orange-50 dark:bg-slate-800 rounded-2xl p-6 border border-orange-200 dark:border-slate-700 shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/50 dark:to-purple-800/50 rounded-xl">
+                <BarChart3 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Volume Analytics</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-300">Trading volume activity trends</p>
+              </div>
+            </div>
             {isVolumeHistoryLoading ? (
               <div className="h-[300px] flex items-center justify-center">
                 <Loading text="Loading volume data..." />
@@ -462,23 +425,21 @@ export default function Dashboard() {
                 height={300}
               />
             )}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </div>
 
-      {/* Token Distribution Chart */}
-      {selectedChainId && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Token Distribution - {selectedChain?.name || 'Selected Chain'}
-            </CardTitle>
-            <CardDescription>
-              Breakdown of token allocation across different categories
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        {/* Token Distribution Chart */}
+        {selectedChainId && (
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-lg mb-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/50 dark:to-orange-800/50 rounded-xl">
+                <Shield className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Token Distribution</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-300">{selectedChain?.name || 'Selected Chain'} token allocation breakdown</p>
+              </div>
+            </div>
             {isTokenDistributionLoading ? (
               <div className="h-[400px] flex items-center justify-center">
                 <Loading text="Loading token distribution..." />
@@ -490,134 +451,78 @@ export default function Dashboard() {
                 height={400}
               />
             ) : (
-              <div className="h-[400px] flex items-center justify-center text-muted-foreground">
+              <div className="h-[400px] flex items-center justify-center text-slate-500 dark:text-slate-400">
                 No token distribution data available
               </div>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        )}
 
-      {/* Market Statistics */}
-      {priceData && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Market Statistics</CardTitle>
-            <CardDescription>Detailed market metrics for RING token</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              <div className="p-4 border rounded-lg">
-                <p className="text-sm text-muted-foreground">Market Cap</p>
-                <p className="text-xl font-bold mt-1">
-                  {formatVolume(priceData.marketCap || 0)}
-                </p>
+        {/* Network Status */}
+        {chains.length > 0 && (
+          <div className="bg-red-50 dark:bg-slate-800 rounded-2xl p-6 border border-red-200 dark:border-slate-700 shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/50 rounded-xl">
+                <Server className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
-              <div className="p-4 border rounded-lg">
-                <p className="text-sm text-muted-foreground">24h Volume</p>
-                <p className="text-xl font-bold mt-1">
-                  {formatVolume(priceData.volume24h || 0)}
-                </p>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <p className="text-sm text-muted-foreground">24h Change</p>
-                <p className={`text-xl font-bold mt-1 ${priceData.priceChange24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                  {priceData.priceChange24h >= 0 ? '+' : ''}{priceData.priceChange24h.toFixed(2)}%
-                </p>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <p className="text-sm text-muted-foreground">Data Source</p>
-                <p className="text-xl font-bold mt-1 capitalize">
-                  {priceData.source || 'N/A'}
-                </p>
-              </div>
-              <div className="p-4 border rounded-lg">
-                <p className="text-sm text-muted-foreground">Last Updated</p>
-                <p className="text-sm font-medium mt-1">
-                  {priceData.lastUpdated 
-                    ? new Date(priceData.lastUpdated).toLocaleString()
-                    : 'N/A'
-                  }
-                </p>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Network Status</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-300">Real-time status of all connected networks</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Network Status */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Connected Networks</CardTitle>
-          <CardDescription>
-            Real-time status of all connected blockchain networks
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoadingChains ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[...Array(3)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-48 bg-card animate-pulse rounded-lg border"
-                />
-              ))}
-            </div>
-          ) : chains.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-12 text-center">
-              <Server className="h-16 w-16 text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No Networks Connected</h3>
-              <p className="text-muted-foreground mb-4 max-w-md">
-                Connect to a Substrate-based blockchain to start monitoring network health and metrics.
-              </p>
-              <Button 
-                variant="primary" 
-                animation="ripple"
-                onClick={() => navigate('/discovery')}
-              >
-                Discover Networks
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {chains.map(chain => (
-                <Card key={chain.id}>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle>{chain.name}</CardTitle>
-                        <Badge variant="default" className="mt-1">Connected</Badge>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {chains?.map((chain: any) => (
+                <SimpleTooltip key={chain.id} content={`Real-time status for ${chain.name} network`}>
+                  <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 dark:from-slate-800/50 dark:to-slate-700/30 rounded-xl p-6 border border-slate-200/50 dark:border-slate-600/50 hover:shadow-lg transition-all duration-300 cursor-pointer">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/50 dark:to-blue-800/50 rounded-lg">
+                          <Server className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <h4 className="font-semibold text-slate-900 dark:text-white">{chain.name}</h4>
+                      </div>
+                      <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium ${
+                        chain.status === 'connected'
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                          : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                      }`}>
+                        <div className={`w-2 h-2 rounded-full ${
+                          chain.status === 'connected' ? 'bg-green-500' : 'bg-red-500'
+                        }`}></div>
+                        {chain.status === 'connected' ? 'Connected' : 'Disconnected'}
                       </div>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="flex items-center">
-                        <Zap className="h-4 w-4 mr-1 text-muted-foreground" />
-                        <span>Block: {chain.detailedStatus?.latestBlockNumber?.toLocaleString()}</span>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Zap className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                          <span className="text-sm text-slate-600 dark:text-slate-400">Latest Block</span>
+                        </div>
+                        <span className="font-semibold text-slate-900 dark:text-white">{chain.detailedStatus?.latestBlockNumber?.toLocaleString() || 'N/A'}</span>
                       </div>
-                      <div className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
-                        <span>Finalized: {chain.detailedStatus?.finalizedBlockNumber?.toLocaleString()}</span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                          <span className="text-sm text-slate-600 dark:text-slate-400">Validators</span>
+                        </div>
+                        <span className="font-semibold text-slate-900 dark:text-white">{chain.detailedStatus?.activeValidators?.toLocaleString() || 'N/A'}</span>
                       </div>
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-1 text-muted-foreground" />
-                        <span>Validators: {chain.detailedStatus?.activeValidators?.toLocaleString()}</span>
-                      </div>
-                      <div className="flex items-center col-span-2">
-                        <Activity className="h-4 w-4 mr-1 text-muted-foreground" />
-                        <span>
-                          Latest Block: {chain.detailedStatus?.latestBlockTimestamp ? new Date(chain.detailedStatus.latestBlockTimestamp).toLocaleString() : 'N/A'}
-                        </span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                          <span className="text-sm text-slate-600 dark:text-slate-400">Block Time</span>
+                        </div>
+                        <span className="font-semibold text-slate-900 dark:text-white">{chain.detailedStatus?.blockTime || 'N/A'}s</span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </SimpleTooltip>
               ))}
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
+        </div>
+      </div>
     </div>
   );
 }

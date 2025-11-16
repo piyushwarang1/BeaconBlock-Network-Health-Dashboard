@@ -20,11 +20,10 @@ BeaconBlock is a next-generation network health dashboard and blockchain explore
 - **Zustand** for lightweight state management
 - **Recharts** for beautiful data visualizations
 
-### Backend (Server)
-- **Node.js** with Express for robust API server
+### Backend (Serverless)
+- **Vercel Serverless Functions** for scalable API endpoints
 - **TypeScript** for type safety and better developer experience
 - **Polkadot.js API** for Substrate chain interactions
-- **Socket.IO** for real-time WebSocket connections
 - **Winston** for structured logging
 
 ## 📋 Prerequisites
@@ -34,32 +33,46 @@ BeaconBlock is a next-generation network health dashboard and blockchain explore
 
 ## 🛠️ Installation & Setup
 
+### Local Development
+
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd "network health dashboard"
+   cd BeaconBlock-Network-Health-Dashboard
    ```
 
-2. **Install dependencies**
+2. **Install all dependencies**
    ```bash
    npm run install:all
    ```
+   This installs dependencies for the root, client, and server components.
 
-3. **Environment Configuration**
-   ```bash
-   cd server
-   cp .env.example .env
-   # Edit .env with your preferred settings
-   ```
-
-4. **Start development servers**
+3. **Start development servers**
    ```bash
    npm run dev
    ```
+   This starts both the client (React) on http://localhost:5173 and the server (Express) on http://localhost:3001 concurrently.
 
-   This will start:
-   - Frontend development server on http://localhost:3000
-   - Backend API server on http://localhost:5000
+### Vercel Deployment
+
+1. **Install Vercel CLI**
+   ```bash
+   npm install -g vercel
+   ```
+
+2. **Deploy to Vercel**
+   ```bash
+   cd client
+   vercel --prod
+   ```
+
+   Follow the prompts to link your Vercel account and deploy the application.
+
+3. **Environment Variables**
+   Configure environment variables in your Vercel dashboard or using the CLI:
+   ```bash
+   vercel env add LOG_LEVEL
+   ```
 
 ## 🎯 Usage
 
@@ -85,33 +98,35 @@ BeaconBlock is a next-generation network health dashboard and blockchain explore
 
 ### Project Structure
 ```
-├── client/                 # React frontend
+├── client/                 # React frontend with Vercel serverless functions
+│   ├── api/               # Serverless API routes
+│   │   ├── _lib/          # Shared services and utilities
+│   │   └── chains/        # Chain-related API endpoints
 │   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── pages/         # Route components
-│   │   ├── hooks/         # Custom React hooks
-│   │   ├── services/      # API and chain services
-│   │   ├── stores/        # State management
-│   │   └── types/         # TypeScript definitions
-│   └── public/            # Static assets
-├── server/                # Node.js backend
+│   │   ├── components/    # Reusable UI components
+│   │   ├── pages/        # Route components
+│   │   ├── hooks/        # Custom React hooks
+│   │   ├── lib/          # API client and utilities
+│   │   └── types/        # TypeScript definitions
+│   ├── public/           # Static assets
+│   └── package.json      # Client dependencies
+├── server/               # Express.js backend API
 │   ├── src/
-│   │   ├── controllers/   # Route handlers
-│   │   ├── services/      # Business logic
-│   │   ├── middleware/    # Express middleware
-│   │   ├── types/         # TypeScript definitions
-│   │   └── utils/         # Helper functions
-│   └── dist/              # Compiled JavaScript
-└── package.json           # Root package configuration
+│   │   ├── routes/       # API route handlers
+│   │   ├── services/     # Business logic services
+│   │   ├── types/        # TypeScript definitions
+│   │   └── index.ts      # Server entry point
+│   ├── migrations/       # Database migrations
+│   └── package.json      # Server dependencies
+├── serverless/           # Vercel serverless functions
+│   ├── functions/        # Serverless function handlers
+│   └── package.json      # Serverless dependencies
+├── predictive-analytics/ # Python ML service
+│   ├── app.py           # Flask API
+│   ├── sentiment_overlay.py # Sentiment analysis
+│   └── requirements.txt # Python dependencies
+└── package.json          # Root package.json with workspace scripts
 ```
-
-### Available Scripts
-
-- `npm run dev` - Start both frontend and backend in development mode
-- `npm run build` - Build the frontend for production
-- `npm run start` - Start the production server
-- `npm run client:dev` - Start only the frontend development server
-- `npm run server:dev` - Start only the backend development server
 
 ## 🌐 Supported Networks
 
@@ -150,7 +165,56 @@ If you encounter any issues or have questions:
 2. Create a new issue with detailed information
 3. Join our community discussions
 
+### Available Scripts
+
+**Root (in project root directory):**
+- `npm run install:all` - Install dependencies for all components
+- `npm run dev` - Start both client and server development servers concurrently
+- `npm run client:dev` - Start only the client development server
+- `npm run server:dev` - Start only the server development server
+- `npm run build` - Build the client for production
+
+**Client (in client/ directory):**
+- `npm run dev` - Start the frontend development server
+- `npm run build` - Build the frontend for production
+- `npm run preview` - Preview the production build locally
+
+**Server (in server/ directory):**
+- `npm run dev` - Start the Express server in development mode
+- `npm run build` - Build the server for production
+- `npm run start` - Start the production server
+
+**Vercel Commands:**
+- `vercel dev` - Start local development server with Vercel functions
+- `vercel --prod` - Deploy to production
+- `vercel env add VARIABLE_NAME` - Add environment variables
+
+## 🤖 Predictive Analytics
+
+The predictive analytics component provides machine learning-powered insights for network health monitoring:
+
+- **Price Prediction**: Forecast token price movements using historical data
+- **Volume Analysis**: Predict trading volume patterns
+- **Sentiment Analysis**: Analyze market sentiment from social media and news
+- **Network Health Forecasting**: Predict potential network issues before they occur
+
+To run the predictive analytics service:
+```bash
+cd predictive-analytics
+pip install -r requirements.txt
+python app.py
+```
+
 ---
+
+# BeaconBlock-Network-Health-Dashboard
+Real-time visualization dashboard for Polkadot network - built for Polkadot Hackathon
+
+# BeaconBlock-Network-Health-Dashboard
+Real-time visualization dashboard for Polkadot network - built for Polkadot Hackathon
+
+# BeaconBlock-Network-Health-Dashboard
+Real-time visualization dashboard for Polkadot network - built for Polkadot Hackathon
 
 Built with ❤️ for the Substrate and Polkadot ecosystem
 =======

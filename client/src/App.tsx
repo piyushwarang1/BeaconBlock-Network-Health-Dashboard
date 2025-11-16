@@ -4,10 +4,13 @@ import { Toaster } from 'react-hot-toast'
 import { ThemeProvider } from './components/theme/theme-provider'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import Layout from './components/layout/Layout'
+import Home from './pages/Home'
 import Dashboard from './pages/Dashboard'
 import ChainExplorer from './pages/ChainExplorer'
 import NetworkDiscovery from './pages/NetworkDiscovery'
 import ValidatorMonitor from './pages/ValidatorMonitor'
+import PredictiveAnalytics from './pages/PredictiveAnalytics'
+import Contact from './pages/Contact'
 import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
 import { socket } from './lib/socket'
@@ -38,15 +41,18 @@ function App() {
       <ThemeProvider defaultTheme="system" storageKey="beacon-block-theme">
         <Toaster position="top-right" />
         <Routes>
-          <Route path="/" element={<Layout socketConnected={isConnected} />}>
-            <Route index element={<Dashboard />} />
-            <Route path="explorer/:chainId?" element={<ChainExplorer />} />
-            <Route path="discovery" element={<NetworkDiscovery />} />
-            <Route path="validators/:chainId?" element={<ValidatorMonitor />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-        </Routes>
+           <Route path="/" element={<Layout socketConnected={isConnected} />}>
+             <Route index element={<Home />} />
+             <Route path="dashboard" element={<Dashboard />} />
+             <Route path="explorer/:chainId?" element={<ChainExplorer />} />
+             <Route path="discovery" element={<NetworkDiscovery />} />
+             <Route path="validators/:chainId?" element={<ValidatorMonitor />} />
+             <Route path="predictive" element={<PredictiveAnalytics />} />
+             <Route path="contact" element={<Contact />} />
+             <Route path="settings" element={<Settings />} />
+             <Route path="*" element={<NotFound />} />
+           </Route>
+          </Routes>
       </ThemeProvider>
     </ErrorBoundary>
   )

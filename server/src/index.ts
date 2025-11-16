@@ -14,6 +14,8 @@ import { discoveryRoutes } from './routes/discovery';
 import { evmRoutes } from './routes/evm';
 import { priceRoutes } from './routes/prices';
 import { volumeRoutes } from './routes/volume';
+import { predictionsRoutes } from './routes/predictions';
+import { sentimentRoutes } from './routes/sentiment';
 
 dotenv.config();
 
@@ -59,8 +61,8 @@ app.use((req, res, next) => {
 });
 
 // Initialize services
-const chainManager = new ChainManager(logger, io);
-const evmService = new EVMService(logger, io);
+const chainManager = new ChainManager(logger);
+const evmService = new EVMService(logger);
 const priceService = new PriceService(logger);
 const volumeService = new VolumeService(logger);
 const chainDiscovery = new ChainDiscovery(logger);
@@ -71,6 +73,8 @@ app.use('/api/discovery', discoveryRoutes(chainDiscovery, logger));
 app.use('/api/evm', evmRoutes(evmService, logger));
 app.use('/api/prices', priceRoutes(priceService, logger));
 app.use('/api/volume', volumeRoutes(volumeService, logger));
+app.use('/api/predictions', predictionsRoutes(logger));
+app.use('/api/sentiment', sentimentRoutes(logger));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -126,7 +130,7 @@ httpServer.listen(PORT, () => {
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully...');
   await chainManager.disconnectAll();
-  await evmService.disconnectAll();
+  // evmService.disconnectAll(); // TODO: implement disconnectAll for EVMService
   httpServer.close(() => {
     logger.info('Server closed');
     process.exit(0);
@@ -136,7 +140,7 @@ process.on('SIGTERM', async () => {
 process.on('SIGINT', async () => {
   logger.info('SIGINT received, shutting down gracefully...');
   await chainManager.disconnectAll();
-  await evmService.disconnectAll();
+  // evmService.disconnectAll(); // TODO: implement disconnectAll for EVMService
   httpServer.close(() => {
     logger.info('Server closed');
     process.exit(0);

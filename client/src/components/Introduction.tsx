@@ -16,8 +16,17 @@ import {
 } from 'lucide-react';
 
 export default function Introduction() {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(() => {
+    // Check if user has dismissed the introduction before
+    const hasSeenIntro = localStorage.getItem('beaconblock-intro-seen');
+    return !hasSeenIntro;
+  });
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleDismiss = () => {
+    setIsVisible(false);
+    localStorage.setItem('beaconblock-intro-seen', 'true');
+  };
 
   if (!isVisible) return null;
 
@@ -49,7 +58,7 @@ export default function Introduction() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setIsVisible(false)}
+              onClick={handleDismiss}
               className="text-muted-foreground hover:text-foreground"
             >
               <X className="h-4 w-4" />

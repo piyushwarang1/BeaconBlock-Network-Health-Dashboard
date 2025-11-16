@@ -26,8 +26,25 @@ export default defineConfig({
   },
   define: {
     global: 'globalThis',
+    'process.env': {},
+    'process.browser': true,
+    'process.version': '"v16.0.0"',
+    'globalThis.Request': 'Request',
+    'globalThis.Response': 'Response',
+    'globalThis.fetch': 'fetch',
+    'globalThis.Headers': 'Headers',
+    'globalThis.FormData': 'FormData',
+    'globalThis.URL': 'URL',
+    'globalThis.URLSearchParams': 'URLSearchParams',
   },
   optimizeDeps: {
     include: ['@polkadot/api', '@polkadot/util', '@polkadot/util-crypto'],
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
   },
 })

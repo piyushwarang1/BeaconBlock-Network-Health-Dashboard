@@ -59,6 +59,80 @@ export const LoadingDots: React.FC<{ className?: string }> = ({ className }) => 
   );
 };
 
+// Skeleton loading components
+export const Skeleton: React.FC<{ className?: string; style?: React.CSSProperties }> = ({ className, style }) => {
+  return (
+    <div className={cn('animate-pulse rounded-md bg-muted', className)} style={style} />
+  );
+};
+
+export const SkeletonCard: React.FC<{ className?: string }> = ({ className }) => {
+  return (
+    <div className={cn('p-6 border rounded-lg bg-card', className)}>
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-8 w-16" />
+        </div>
+        <Skeleton className="h-12 w-12 rounded-lg" />
+      </div>
+    </div>
+  );
+};
+
+export const SkeletonChart: React.FC<{ height?: number; className?: string }> = ({
+  height = 300,
+  className
+}) => {
+  return (
+    <div className={cn('border rounded-lg bg-card p-4', className)}>
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-6 w-32" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+          <Skeleton className="h-4 w-4/6" />
+          <Skeleton className="h-4 w-3/6" />
+          <Skeleton className="h-4 w-2/6" />
+        </div>
+        <Skeleton className="w-full" style={{ height: `${height - 100}px` }} />
+      </div>
+    </div>
+  );
+};
+
+export const SkeletonTable: React.FC<{ rows?: number; cols?: number; className?: string }> = ({
+  rows = 5,
+  cols = 4,
+  className
+}) => {
+  return (
+    <div className={cn('border rounded-lg bg-card', className)}>
+      <div className="p-4">
+        <div className="space-y-3">
+          {/* Header */}
+          <div className="flex space-x-4">
+            {Array.from({ length: cols }).map((_, i) => (
+              <Skeleton key={i} className="h-4 flex-1" />
+            ))}
+          </div>
+          {/* Rows */}
+          {Array.from({ length: rows }).map((_, rowIndex) => (
+            <div key={rowIndex} className="flex space-x-4">
+              {Array.from({ length: cols }).map((_, colIndex) => (
+                <Skeleton key={colIndex} className="h-4 flex-1" />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 
 

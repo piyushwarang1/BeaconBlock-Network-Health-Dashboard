@@ -1,10 +1,10 @@
 import axios, { AxiosInstance } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 // Create axios instance with default config
 const apiClient: AxiosInstance = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
+  baseURL: API_BASE_URL ? `${API_BASE_URL}/api` : '/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -35,7 +35,7 @@ export const chainApi = {
     return response.data;
   },
   getChainMetadata: async (chainId: string) => {
-    const response = await apiClient.get(`/chains/${chainId}/metadata`);
+    const response = await apiClient.get(`/chains/${chainId}`);
     return response.data;
   },
   getBlocks: async (chainId: string, limit: number = 10) => {
